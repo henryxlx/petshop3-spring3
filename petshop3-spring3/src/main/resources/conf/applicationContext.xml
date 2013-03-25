@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns="http://www.springframework.org/schema/beans" xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+       xsi:schemaLocation="http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.1.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd
+        http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-3.1.xsd">
+
+
+    <aop:aspectj-autoproxy/>
+
+    <context:annotation-config/>
+
+    <bean class="org.springframework.beans.factory.annotation.RequiredAnnotationBeanPostProcessor" lazy-init="false"/>
+
+    <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="location" value="classpath:jdbc.properties"/>
+    </bean>
+
+    <!-- 使用annotation 自动注册bean,并检查@Required,@Autowired的属性已被注入 -->
+    <!--
+           <context:component-scan base-package="edu.jostutor.petshop">
+               <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+           </context:component-scan>
+    -->
+
+    <!-- ADD PERSISTENCE SUPPORT HERE (jdbc, jpa, hibernate, etc) -->
+    <context:component-scan base-package="edu.jostutor.**.dao"/>
+    <context:component-scan base-package="edu.jostutor.**.service"/>
+
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <beans profile="mysqldemo">
+        <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+            <property name="driverClassName" value="${mysql.jdbc.driverClassName}"/>
+            <property name="url" value="${mysql.jdbc.url}"/>
+            <property name="username" value="${mysql.jdbc.username}"/>
+            <property name="password" value="${mysql.jdbc.password}"/>
+        </bean>
+    </beans>
+
+    <beans profile="h2demo">
+        <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+            <property name="driverClassName" value="${h2.jdbc.driverClassName}"/>
+            <property name="url" value="${h2.jdbc.url}"/>
+            <property name="username" value="${h2.jdbc.username}"/>
+            <property name="password" value="${h2.jdbc.password}"/>
+        </bean>
+
+        <!-- 初始化数据结构与默认数据 -->
+        <jdbc:initialize-database data-source="dataSource" ignore-failures="ALL">
+            <jdbc:script location="classpath:embedded/h2/schema.sql" />
+            <jdbc:script location="classpath:embedded/h2/petshop-data.sql" encoding="UTF-8" />
+        </jdbc:initialize-database>
+    </beans>
+
+</beans>

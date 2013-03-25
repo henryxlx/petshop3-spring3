@@ -1,0 +1,22 @@
+1. 手工变更记录
+---------------
+
+变更类型注记标志:
+
+# -> 缺陷修复(Bug Fix)
++ -> 新增(Addition)
+^ -> 改变(Change)
+- -> 删除(Removed)
+! -> 说明(Note)
+
+--------------------------------------------------------------------------------------------------------------
+
+21-三月-2013 xulixin
+ + 将MySQL数据库移植到H2，注意H2在创建数据表时语法与MySQL的不同
+
+19-三月-2013 xulixin
+ ^ 重新定义ViewStatepagerTag，继承SimplePagerTag。
+ # 使用标签文件StaticAddress.tag时没有设置value属性，无法显示。现已经修改JSP页面对标签文件引用时value属性的设置。
+ - 移除OrderBillingController和OrderProcessController，合并操作到OrderController中
+
+======================================= End of this file =============================================

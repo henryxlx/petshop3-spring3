@@ -1,0 +1,171 @@
+2013-03-20
+JSTL中c:set标签的要点和技巧
+
+c:set标签有两种不同的设置：var和target。
+
+var“版本”用于设置作用域属性，target“版本”用于设置bean属性或Map值。
+这两个版本都有两种形式：有体和没有体。有体的只是放入值的另一种途径。
+
+★ var“版本”
+<c:set var="userLevel" scope="session" value="Cowboy"/>
+<c:set var="fido" value="${person.dog}"/>
+<c:set var="user" scope="session">
+    Sheriff, Bartender, Cowgirl
+</c:set>
+如果“value”为null，“var”指定的属性将被删除！
+如果“var”指定的属性不存在，则会创建一个属性，但仅当“value”不为null时才会创建新属性。
+
+★ target“版本”
+<c:set target="${petMap}" property="dogName" value="Clover" scope="session"/>
+<c:set target="${person}" property="name">
+   ${foo.name}
+</c:set>
+
+如果“target”是一个Map，“property”指定的是该Map的一个键；如果“target”是一个bean，“property”指定的是该bean的一个成员字段。
+如果“target”表达式为null，容器会抛出一个异常。
+如果“target”表达式不是一个Map或bean，容器会抛出一个异常。
+如果“target”表达式是一个bean，但是这个bean没有与“property”匹配的成员字段，容器会抛出一个异常。
+
+★ 使用c:set标签的要点
+不能同时有“var”和“target”属性。
+
+“scope” 是可选的，如果没有使用这个属性，则默认为页面作用域。
+具体的，当没有使用这个属性时，容器会依次在页面作用域、请求作用域、会话作用域、应用作用域查找，
+如果找不到“var”指定名字的作用域属性，容器就会在页面作用域新建一个属性；如果找不到“target”指定的对象，容器会抛出一个异常。
+-----------------------------------------------------------------------------------------------------------------------
+2013-01-07
+  HTML image button
+
+button 分2类
+1. normal button 不提交
+<input type="button" name="add" value="add" />
+<input type="button" name="cancel" value="cancel" />
+
+2. submit button 提交
+<input type="submit" name="submit" value="add" />
+<input type="submit" name="submit" value="cancel" />
+image button 可以自动触发 form 的 onsubmit 事件. （刷新）
+ <input type="image" id="ibtnSearch" src="../Images/depend/btn_search.gif" style="height:22px; width:32px;" onclick="pr.Search();" />
+
+不刷新可以用
+ <a href="javascript://" onclick="pr.Search();" ><img src="../Images/depend/btn_search.gif" alt=""/></a>
+
+
+-----------------------------------------------------------------------------------------------------------------------
+2013-01-03
+  JSTL forEach varStatus="row"  row.count 的特殊用法
+
+<c:set var="">
+主体内容是值的特殊用法
+</c:set>
+
+    <c:forEach items="${spaces}" var="space" varStatus="row">
+        <c:set var="rowClass">
+            <c:choose>
+                <c:when test="${selectedSpaceId == space.id}">class="selected"</c:when>
+                <c:when test="${row.count % 2 == 0}">class="alt"</c:when>
+            </c:choose>
+        </c:set>
+        <tr ${rowClass}>
+            <td>${space.prefixCode}</td>
+            <td>${space.name}</td>
+            <td>
+                <a href="<c:url value='/flow/space?spaceId=${space.id}'/>">(<fmt:message key='edit'/>)</a>
+            </td>
+            <td>${space.description}</td>
+            <td align="center">
+                <a href="<c:url value='/flow/space_allocate?spaceId=${space.id}'/>">(+)</a>
+            </td>
+        </tr>
+    </c:forEach>
+-----------------------------------------------------------------------------------------------------------------------
+
+2012-10-03
+  spring jdbc 获取主键值 mysql
+
+  最近在做J-Hi融合SpringJDBC时遇到一个棘手的问题，那就是在insert一条记录时如何取回记录主键值的？问题主要让我纠结在对跨数据库SpringJDBC的处理上，大家都知道象SQLServer或MyServer主键的值是以自增的方式，而象Oracle主建的值通过序列生成并通过insert将值直接插入到表中的。为此SpringJDBC提供了两种机制，
+      1、主键自增的解决方案
+          KeyHolder keyHolder = new GeneratedKeyHolder();
+          this.getJdbcTemplate().update(new PreparedStatementCreator(){
+
+              public PreparedStatement createPreparedStatement(Connection con)
+                      throws SQLException {
+
+  PreparedStatement ps=con.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS);
+
+                  return ps;
+              }
+
+          }, keyHolder);
+
+      return keyHolder.getKey().intValue();
+  keyHolder 是数据库自增主键值的持有者，它监听PreparedStatement的返回的值Statement.RETURN_GENERATED_KEYS获取主键值，并存放在自己的池中（实际上是一个list）一般来说，一个keyHolder实例只绑定一个PreparedStatement的执行，当然最好也只是插入一条数据库记录，这样才能保证池中只有一个主键值。
+  当keyHolder获得主键值后，您可以在任何时候通过访问keyHolder对象得到这个主键值，也就是说只要它的生命期存在，这个主键的值就一直不会丢失。
+  总结：1)、在执行PreparedStatement之前创建自增主键的持有者对象keyHolder
+        2)、在创建PreparedStatement对象时一定要声明返回主键值，列如con.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS)
+        3)、只要keyHolder的生命期存在，那么主键的值在任何时候与位置你都可以取得到
+
+      2、检索数据库序列生成的主键的解决方案
+          OracleSequenceMaxValueIncrementer incr = new OracleSequenceMaxValueIncrementer(dataSource, "SIMPLE_SEQUENCE");
+          return incr.nextIntValue();
+  象Oracle这样的数据库SpringJDBC的解决方案一目了解，通过给定数据源dataSource与序列名"SIMPLE_SEQUENCE"就可以这个序列的最大值。当然还可以通过这个类设计缓冲区大小通过setCacheSize方法，该方法可以一次性取出多个值以减少与数据库的访问次数（数据库的交互是很耗时与耗费资源的）
+
+  J-Hi的问题与解决方法
+      因为J-Hi要实现跨数据库跨多个ORM框架因此对于SpringJDBC这两种方案必须要融合到一起，并且在总体设计上还要与其它的ORM框架（目前J-Hi已融合的ORM框架有hibernate、ibatis2、ibatis3）的接口声明相兼容,因此在对SpringJDBC集成的总体设计上我借鉴了hibernate的方言思想，通过方言将SpringJDBC两种方案融合在J-Hi之中以实现对不同类型数据库主键管理的差异性。
+          KeyHolder keyHolder = new GeneratedKeyHolder();
+          this.getJdbcTemplate().update(new PreparedStatementCreator(){
+
+              public PreparedStatement createPreparedStatement(Connection con)
+                      throws SQLException {
+
+  ISpringJDBCHiDialect dialect = sessionFactory.getDialect();
+  PreparedStatement ps=con.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS);
+
+                      if(stepFlage == primaryKeyIndex && valueClass.getPropertyName().equals(primaryKeyName)){
+                          Number _id = dialect.getSelectKey(entity.getEntityName(), getJdbcTemplate().getDataSource());
+                  return ps;
+              }
+
+          }, keyHolder);
+
+          if(obj.getPrimarykey() == null)
+              BeanUtil.setPropertyValue(obj, "id", keyHolder.getKey().intValue());
+
+  从原生的SQL语句上讲Oracle在insert时要插入主键值，而SQLServer恰好相反必须不能插入主键的值，我在设计上就是抓住这一特性，再结合方言，实现了跨数据库的SpringJDBC, dialect.getSelectKey()方法，对应不同的数据库方言，如果是oracle就会生成主键的值，而如果是SQLServer这个方法不会返回任何值，代码如下
+  Oracle的方言方法：
+      public Number getSelectKey(String entityName, DataSource dataSource) {
+          OracleSequenceMaxValueIncrementer incr = new OracleSequenceMaxValueIncrementer(dataSource, "HIBERNATE_SEQUENCE");
+          return incr.nextIntValue();
+      }
+  SQLServer的方言方法：
+      public Number getSelectKey(String entityName, DataSource dataSource) {
+  //        自增主键不用实现该方法
+          return null;
+      }
+  通过返回主键值是否为null，还判断在拼写sql时是否插入主键字段的值
+  最后通过
+          if(obj.getPrimarykey() == null)
+              BeanUtil.setPropertyValue(obj, "id", keyHolder.getKey().intValue());
+  Pojo对象是否主键值(如果没有就说明是自增型的如SQLServer，如果有就说明是序列生成的如Oracle)，来将其赋值到POJO的属性中.
+
+  Spring为自增长主键值数据库中插入数据后，获得该插入数据的ID的代码示例：
+  复制代码
+      public void addForum(final Forum forum) {
+          final String sql = "INSERT INTO t_forum(forum_name, forum_desc) VALUES(?,?)";
+          KeyHolder keyHolder = new GeneratedKeyHolder();
+          getJdbcTemplate().update(new PreparedStatementCreator() {
+              public PreparedStatement createPreparedStatement(Connection conn) {
+                  PreparedStatement ps = conn.prepareStatement(sql);  // ??? 注意此处可能存在问题。
+                  ps.setString(1, forum.getForumName());
+                  ps.setString(2, forum.getForumDesc());
+                  return ps;
+              }
+          }, keyHolder);
+          forum.setForumId(keyHolder.getKey().intValue());
+      }
+
+-----------------------------------------------------------------------------------------------------------------------
+
+2012-09-29
+  左连接、右连接
+======================================= End of this file =============================================
