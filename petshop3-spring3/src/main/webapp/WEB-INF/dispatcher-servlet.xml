@@ -78,9 +78,6 @@
     </bean>
 
     <bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
-        <property name="webBindingInitializer">
-            <bean class="org.jetwinner.spring.web.bind.support.SimpleDateConverter"/>
-        </property>
         <property name="messageConverters" ref="messageConverters"/>
     </bean>
 
