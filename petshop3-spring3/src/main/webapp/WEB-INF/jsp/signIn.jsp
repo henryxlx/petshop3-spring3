@@ -30,7 +30,7 @@
                 <td class="label">Password:</td>
                 <td>
                     <input id="txtPassword" name="password" type="password" value="DotNet" size="15" maxlength="20"/>
-                    <asp:requiredfieldvalidator id="valPassword" runat="server" controltovalidate="txtPassword" errormessage="Please enter password." enableclientscript="False" />
+                    <form:errors path="string" title="Please enter password."/>
                 </td>
             </tr>
         </table>
